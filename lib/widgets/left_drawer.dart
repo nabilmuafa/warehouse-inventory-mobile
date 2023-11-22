@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:warehouse_inventory_mobile/screens/items_form.dart';
+import 'package:warehouse_inventory_mobile/screens/list_item.dart';
 import 'package:warehouse_inventory_mobile/screens/menu.dart';
 
 class LeftDrawer extends StatelessWidget {
@@ -50,6 +51,16 @@ class LeftDrawer extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const ItemFormPage(),
+                    ));
+              }),
+          ListTile(
+              leading: const Icon(Icons.format_list_bulleted_rounded),
+              title: const Text("See Items"),
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ItemPage(),
                     ));
               })
         ],

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 import 'package:warehouse_inventory_mobile/screens/items_form.dart';
+import 'package:warehouse_inventory_mobile/screens/list_item.dart';
+import 'package:warehouse_inventory_mobile/screens/login.dart';
 
 class ItemCard extends StatelessWidget {
   final WarehouseItem item;
@@ -8,10 +12,11 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
     return Material(
       color: item.color,
       child: InkWell(
-        onTap: () {
+        onTap: () async {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(SnackBar(
@@ -19,6 +24,27 @@ class ItemCard extends StatelessWidget {
           if (item.name == "Add Item") {
             Navigator.pushReplacement(context,
                 MaterialPageRoute(builder: (context) => const ItemFormPage()));
+          } else if (item.name == "Items List") {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const ItemPage()));
+          } else if (item.name == "Logout") {
+            final response = await request.logout(
+                "https://muhammad-nabil22-tugas.pbp.cs.ui.ac.id/auth/logout/");
+            String message = response["message"];
+            if (response['status']) {
+              String uname = response["username"];
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text("$message Sampai jumpa, $uname."),
+              ));
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text("$message"),
+              ));
+            }
           }
         },
         child: Container(
