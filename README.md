@@ -15,6 +15,12 @@ Proyek Flutter untuk tugas mata kuliah Pemrograman Berbasis Platform Ganjil 2023
   - [Elemen input form yang saya gunakan](#sebutkan-apa-saja-elemen-input-pada-form-dan-mengapa-digunakan)
   - [Penerapan clean architecture pada Flutter](#penerapan-clean-architecture-pada-aplikasi-flutter)
 - [README.md Tugas 9](#tugas-9)
+  - [Implementasi Checklist](#implementasi-checklist-tugas-9)
+  - [Apakah bisa mengambil data JSON tanpa model terlebih dahulu?](#apakah-bisa-kita-melakukan-pengambilan-data-json-tanpa-membuat-model-terlebih-dahulu-jika-iya-apakah-hal-tersebut-lebih-baik-daripada-membuat-model-sebelum-melakukan-pengambilan-data-json)
+  - [Jelaskan fungsi CookieRequest dan kenapa instance-nya dibagikan ke semua komponen](#jelaskan-fungsi-dari-cookierequest-dan-jelaskan-mengapa-instance-cookierequest-perlu-untuk-dibagikan-ke-semua-komponen-di-aplikasi-flutter)
+  - [Mekanisme pengambilan data JSON hingga ditampilkan pada Flutter](#jelaskan-mekanisme-pengambilan-data-dari-json-hingga-dapat-ditampilkan-pada-flutter)
+  - [Mekanisme autentikasi dari Flutter ke Django](#jelaskan-mekanisme-autentikasi-dari-input-data-akun-pada-flutter-ke-django-hingga-selesainya-proses-autentikasi-oleh-django-dan-tampilnya-menu-pada-flutter)
+  - [Sebutkan seluruh widget yang dipakai pada tugas ini](#sebutkan-seluruh-widget-yang-kamu-pakai-pada-tugas-ini-dan-jelaskan-fungsinya-masing-masing)
 
 ## Tugas 7
 
