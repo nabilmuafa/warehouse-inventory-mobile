@@ -66,7 +66,7 @@ class _ItemPageState extends State<ItemPage> {
                           child: InkWell(
                               splashColor: Colors.blue.withAlpha(30),
                               onTap: () {
-                                Navigator.push(
+                                Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
                                         builder: (context) => ItemDetailPage(

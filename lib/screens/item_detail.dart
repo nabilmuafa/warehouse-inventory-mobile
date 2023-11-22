@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:warehouse_inventory_mobile/models/item.dart";
+import "package:warehouse_inventory_mobile/screens/list_item.dart";
 
 class ItemDetailPage extends StatelessWidget {
   final Item item;
@@ -9,7 +10,12 @@ class ItemDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text("Item Detail")),
+        appBar: AppBar(
+            leading: BackButton(
+              onPressed: () => Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => const ItemPage())),
+            ),
+            title: const Text("Item Detail")),
         body: SingleChildScrollView(
             child: Container(
                 padding: const EdgeInsets.all(10.0),
