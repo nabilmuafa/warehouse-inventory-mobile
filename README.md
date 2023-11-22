@@ -1,5 +1,10 @@
 # Warehouse Inventory Mobile
 
+![Staging badge](https://github.com/nabilmuafa/warehouse-inventory-mobile/actions/workflows/staging.yml/badge.svg)
+![Prerelease badge](https://github.com/nabilmuafa/warehouse-inventory-mobile/actions/workflows/pre-release.yml/badge.svg)
+![Release badge](https://github.com/nabilmuafa/warehouse-inventory-mobile/actions/workflows/release.yml/badge.svg)
+[![Build status](https://build.appcenter.ms/v0.1/apps/97fbda49-8790-4ff1-ba6f-f4d1130a4f53/branches/main/badge)](https://appcenter.ms)
+
 Proyek Flutter untuk tugas mata kuliah Pemrograman Berbasis Platform Ganjil 2023/2024. Dibuat oleh Muhammad Nabil Mu'afa - 2206024972
 
 ### Daftar Isi
