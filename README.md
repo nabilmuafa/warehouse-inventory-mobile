@@ -14,6 +14,7 @@ Proyek Flutter untuk tugas mata kuliah Pemrograman Berbasis Platform Ganjil 2023
   - [Masing-masing layout widget pada Flutter](#jelaskan-masing-masing-layout-widget-pada-flutter-dan-konteks-penggunaannya-masing-masing)
   - [Elemen input form yang saya gunakan](#sebutkan-apa-saja-elemen-input-pada-form-dan-mengapa-digunakan)
   - [Penerapan clean architecture pada Flutter](#penerapan-clean-architecture-pada-aplikasi-flutter)
+- [README.md Tugas 9](#tugas-9)
 
 ## Tugas 7
 
@@ -660,3 +661,401 @@ Pada Flutter, navigasi berfungsi seperti sebuah stack. Halaman yang sedang kita 
 ### Penerapan clean architecture pada aplikasi Flutter
 
 Pada aplikasi Flutter, kita bisa membuat dua folder yang diberi nama `screens` dan `widgets`. Folder `screens` digunakan untuk menyimpan widget-widget buatan yang merupakan satu tampilan/satu layar, sementara folder `widgets` digunakan untuk menyimpan widget-widget buatan yang merupakan widget "kecil" yang di display pada halaman-halaman yang ada di `screens`. Pada Flutter, setiap widget sebaiknya dipisah pada tiap file, meskipun widget tersebut berkaitan. Dengan begitu, kita mempunyai satu file untuk setiap widget.
+
+## Tugas 9
+
+### Implementasi Checklist Tugas 9
+
+<details>
+<summary>Memastikan deployment proyek tugas Django telah berjalan dengan baik</summary>
+
+Deployment sudah aman. Dapat diakses pada https://muhammad-nabil22-tugas.pbp.cs.ui.ac.id
+
+</details>
+<details>
+<summary>Membuat halaman login pada proyek Flutter</summary>
+
+Halaman login pada kasus ini harus menggunakan stateful widget karena memiliki field yang bisa berubah (tidak konstan). Halaman ini punya tombol yang akan berinteraksi dengan endpoint autentikasi mobile pada proyek Django di auth/login sesuai dengan data yang diinput pengguna. Halaman juga akan memunculkan snackbar sukses ataupun gagal ketika tombol login ditekan. Jika login berhasil, halaman akan redirect ke home page.
+
+Kode dapat dilihat pada [`login.dart`](./lib/screens/login.dart) (karena terlalu panjang)
+
+</details>
+<details>
+<summary> Mengintegrasikan sistem autentikasi Django dengan proyek tugas Flutter.</summary>
+
+Untuk integrasi ini, saya membuat app baru pada proyek Django yang bernama `authentication` yang memiliki fungsi-fungsi views berupa login dan logout. Fungsionalitasnya tidak berbeda jauh dengan yang login biasa, hanya saja app authentication ini me-return JSON response sebagai respon dari login atau logout tersebut.
+
+authentication/views.py:
+
+```python
+# import stuff
+
+def login(request):
+    username = request.POST.get("username")
+    password = request.POST.get("password")
+    user = authenticate(username=username, password=password)
+    if user is not None:
+        if user.is_active:
+            auth_login(request, user)
+            return JsonResponse({
+                "username": user.username,
+                "status": True,
+                "message": "Login sukses!",
+            }, status=200)
+        else:
+            return JsonResponse({
+                "status": False,
+                "message": "Login gagal, akun dinonaktifkan."
+            }, status=401)
+    else:
+        return JsonResponse({
+            "status": False,
+            "message": "Login gagal, periksa kembali email atau kata sandi."
+        }, status=401)
+
+
+@csrf_exempt
+def logout(request):
+    username = request.user.username
+
+    try:
+        auth_logout(request)
+        return JsonResponse({
+            "username": username,
+            "status": True,
+            "message": "Logout berhasil!"
+        }, status=200)
+    except:
+        return JsonResponse({
+            "status": False,
+            "message": "Logout gagal."
+        }, status=401)
+
+```
+
+Tentunya saya juga menambahkan routing agar page-page ini bisa diakses. Untuk login berada di auth/login dan logout berada di auth/logout. Pada proyek django saya juga menambahkan dependency dengan `django-cors-headers` agar komunikasi antar "origin", serta menambahkannya ke konfigurasi proyek django. Saya juga menambahkan variabel-variabel yang berkaitan dengan cors headers.
+
+Sementara itu, pada proyek flutter, saya menambahkan dependency package `provider` dan `pbp_django_auth` untuk memudahkan autentikasi. Provider digunakan agar kita bisa menyediakan CookieRequest kepada semua child widgets. Fungsionalitas menyediakan CookieRequest ini saya tambahkan pada `main.dart`. Saya juga mengganti halaman utama ketika aplikasi pertama dibuka.
+
+```dart
+...
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return Provider(
+        create: (_) {
+          CookieRequest request = CookieRequest(); // bagian ini
+          return request;
+        },
+        child: MaterialApp(
+          title: 'Warehouse Inventory',
+          theme: ThemeData(
+            colorScheme:
+                ColorScheme.fromSeed(seedColor: Colors.lightBlue.shade400),
+            useMaterial3: true,
+          ),
+          home: LoginPage(),
+        ));
+  }}
+```
+
+Saya juga menambahkan fungsionalitas logout yang ditambahkan pada tombol di menu.
+
+</details>
+<details>
+<summary>Membuat model kustom sesuai dengan proyek aplikasi Django.</summary>
+
+Untuk melakukan ini, saya memanfaatkan tool online bernama Quicktype yang bisa mengubah JSON dari sebuah objek menjadi sebuah objek kustom di Dart/Flutter. Untuk membuat model kustom ini saya hanya mengakses endpoint json/ pada proyek Django saya untuk mendapat JSON dari semua barang dan mengubahnya menjadi sebuah objek di Dart. Saya definisikan model ini pada lib/models/item.dart.
+
+item.dart
+
+```dart
+// To parse this JSON data, do
+//
+//     final item = itemFromJson(jsonString);
+
+import 'dart:convert';
+
+List<Item> itemFromJson(String str) =>
+    List<Item>.from(json.decode(str).map((x) => Item.fromJson(x)));
+
+String itemToJson(List<Item> data) =>
+    json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
+
+class Item {
+  String model;
+  int pk;
+  Fields fields;
+
+  Item({
+    required this.model,
+    required this.pk,
+    required this.fields,
+  });
+
+  factory Item.fromJson(Map<String, dynamic> json) => Item(
+        model: json["model"],
+        pk: json["pk"],
+        fields: Fields.fromJson(json["fields"]),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "model": model,
+        "pk": pk,
+        "fields": fields.toJson(),
+      };
+}
+
+class Fields {
+  int user;
+  String name;
+  int amount;
+  String description;
+
+  Fields({
+    required this.user,
+    required this.name,
+    required this.amount,
+    required this.description,
+  });
+
+  factory Fields.fromJson(Map<String, dynamic> json) => Fields(
+        user: json["user"],
+        name: json["name"],
+        amount: json["amount"],
+        description: json["description"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "user": user,
+        "name": name,
+        "amount": amount,
+        "description": description,
+      };
+}
+```
+
+</details>
+<details>
+<summary>Membuat halaman yang berisi daftar semua item yang terdapat pada endpoint JSON di Django yang telah dideploy.</summary>
+
+Sebelum implementasi, saya menambahkan dependensi package http ke proyek Flutter dan permission internet pada AndroidManifest (agar permission akses internet pada aplikasi diperbolehkan)
+
+Kemudian, saya mengimplementasikan halaman list item pada `list_item.dart`.
+
+list_item.dart:
+
+```dart
+class ItemPage extends StatefulWidget {
+  const ItemPage({Key? key}) : super(key: key);
+
+  @override
+  _ItemPageState createState() => _ItemPageState();
+}
+
+class _ItemPageState extends State<ItemPage> {
+  Future<List<Item>> fetchItem() async {
+    var url = Uri.parse('https://muhammad-nabil22-tugas.pbp.cs.ui.ac.id/json/');
+    var response = await http.get(
+      url,
+      headers: {"Content-Type": "application/json"},
+    );
+
+    // melakukan decode response menjadi bentuk json
+    var data = jsonDecode(utf8.decode(response.bodyBytes));
+
+    // melakukan konversi data json menjadi object Item
+    List<Item> list_item = [];
+    for (var d in data) {
+      if (d != null) {
+        list_item.add(Item.fromJson(d));
+      }
+    }
+    return list_item;
+  }
+```
+
+Pertama halaman akan melakukan fetch terlebih dahulu dari endpoint tersebut (fungsi ini akan dipanggil pertama ketika widget builder dipanggil). Setelah itu, response JSON yang didapat akan diolah menjadi sebuah objek Item yang sebenarnya dan disimpan pada `list_item.`, kemudian di-return untuk diolah sebagai widget.`
+
+```dart
+@override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text('Item List'),
+        ),
+        drawer: const LeftDrawer(),
+        body: FutureBuilder(
+            future: fetchItem(), // item di fetch disini
+            builder: (context, AsyncSnapshot snapshot) {
+              if (snapshot.data == null) {
+                return const Center(child: CircularProgressIndicator());
+              } else {
+                if (!snapshot.hasData) {
+                  return const Column(
+                    children: [
+                      Text(
+                        "There are no items.",
+                        style:
+                            TextStyle(color: Color(0xff59A5D8), fontSize: 20),
+                      ),
+                      SizedBox(height: 8),
+                    ],
+                  );
+                } else {
+                  return ListView.builder(
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (_, index) => Card(
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          child: InkWell(
+                              splashColor: Colors.blue.withAlpha(30),
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => ItemDetailPage(
+                                            snapshot.data![index])));
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "${snapshot.data![index].fields.name}",
+                                      style: const TextStyle(
+                                        fontSize: 18.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                        "Jumlah: ${snapshot.data![index].fields.amount}"),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                        "${snapshot.data![index].fields.description}")
+                                  ],
+                                ),
+                              ))));
+                }
+              }
+            }));
+  }
+```
+
+Tiap item adalah sebuah elemen pada ListView yang diolah dalam ListView.builder(). Setiap elemen adalah sebuah Inkwell yang dalamnya adalah Padding yang punya child Column yang childnya adalah masing-masing field pada Item, yaitu name, amount, dan description.
+
+</details>
+<details>
+<summary>Membuat halaman detail untuk setiap item yang terdapat pada halaman daftar Item.</summary>
+
+Fungsionalitas akses halaman detail ini terletak pada ListView.builder() pada halaman list item:
+
+list_item.dart:
+
+```dart
+return ListView.builder(
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (_, index) => Card(
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          child: InkWell(
+                              splashColor: Colors.blue.withAlpha(30),
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => ItemDetailPage(
+                                            snapshot.data![index])));
+                              },
+                              ....
+```
+
+Untuk setiap item (yang merupakan sebuah Inkwell), apabila item tersebut ditekan, maka Navigator akan melakukan redirect ke ItemDetailPage dengan memasukkan informasi Item yang ditekan. ItemDetailPage sendiri hanya sebuah halaman yang memunculkan nama jumlah, dan deskripsi. Tombol back/kembali ke halaman list item disediakan by default.
+
+item_detail.dart:
+
+```dart
+import "package:flutter/material.dart";
+import "package:warehouse_inventory_mobile/models/item.dart";
+
+class ItemDetailPage extends StatelessWidget {
+  final Item item;
+
+  const ItemDetailPage(this.item, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(title: const Text("Item Detail")),
+        body: SingleChildScrollView(
+            child: Container(
+                padding: const EdgeInsets.all(10.0),
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      item.fields.name,
+                      textAlign: TextAlign.start,
+                      style: const TextStyle(
+                        fontSize: 32.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      "Jumlah: ${item.fields.amount}",
+                      textAlign: TextAlign.start,
+                      style: const TextStyle(
+                        fontSize: 18.0,
+                      ),
+                    ),
+                    Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Text(
+                          item.fields.description,
+                          textAlign: TextAlign.start,
+                          style: const TextStyle(
+                            fontSize: 18.0,
+                          ),
+                        )),
+                  ],
+                ))));
+  }
+}
+
+```
+
+</details>
+
+### Apakah bisa kita melakukan pengambilan data JSON tanpa membuat model terlebih dahulu? Jika iya, apakah hal tersebut lebih baik daripada membuat model sebelum melakukan pengambilan data JSON?
+
+Bisa saja, akan tetapi pengolahan data akan lebih rumit karena tiap data masih terpisah-pisah. Apabila kita membuat model terlebih dahulu, kita bisa mengubah JSON tersebut menjadi instance dari model dan kita dapat melakukan pengolahan atau manipulasi data dengan lebih mudah.
+
+### Jelaskan fungsi dari CookieRequest dan jelaskan mengapa instance CookieRequest perlu untuk dibagikan ke semua komponen di aplikasi Flutter.
+
+Secara garis besar, CookieRequest akan meng-handle/menerima dan mengelola cookies yang diterima dari response pertama kali ketika login. Seperti yang kita tahu bahwa cookie di web browser disimpan pada browser. Dalam kasus Flutter ini, CookieRequest dapat dianggap menjadi pengelola cookie tersebut. Instance CookieRequest dibagikan ke semua komponen agar semua komponen lain dapat melakukan request dengan menggunakan cookie yang saat ini dimiliki.
+
+### Jelaskan mekanisme pengambilan data dari JSON hingga dapat ditampilkan pada Flutter.
+
+Berdasarkan kode, pertama JSON data akan di fetch dari endpoint JSON pada web page menggunakan URL parse dulu kemudian GET request dengan package http. Data yang telah diterima akan diubah menjadi objek Item yang berkaitan di Flutter. Dari objek Item tersebut, tiap-tiap fieldnya akan bisa ditampilkan melalui FutureBuilder yang menunggu hingga request secara asinkronus selesai
+
+### Jelaskan mekanisme autentikasi dari input data akun pada Flutter ke Django hingga selesainya proses autentikasi oleh Django dan tampilnya menu pada Flutter.
+
+Pertama, username dan password akan dikirimkan dalam POST request ke endpoint login Django yang telah dibuat khusus untuk mobile. Melalui views di Django, Django akan mencoba login dengan username dan password yang diberikan. Apabila login gagal, maka request akan mengembalikan respon 401. Namun apabila login berhasil, request akan mengembalikan respon 200, pesan sukses, dan juga username yang berhasil di-login-kan, kemudian melakukan redirect ke home page.
+
+### Sebutkan seluruh widget yang kamu pakai pada tugas ini dan jelaskan fungsinya masing-masing.
+
+**(dengan asumsi bahwa yang dimaksud adalah \*widget baru yang dipakai\* pada tugas ini)**
+
+- `FutureBuilder`: Sebuah widget yang akan membangun dirinya sendiri berdasarkan interaksi dengan sebuah objek Future yang paling terbaru.
+- `CircularProgressIndicator`: Sebuah widget Material Design yang merupakan progress indicator lingkaran, akan berputar dan menandakan bahwa aplikasi sedang sibuk/sedang melakukan pemrosesan.
+- `ItemDetailPage`: Sebuah widget buatan yang memunculkan halaman detail dari setiap Item
+- `SizedBox`: Sebuah widget berupa box yang ukurannya dapat ditentukan.
+- `TextEditingController`: Controller untuk sebuah text field yang bisa diedit. Akan memberikan notifikasi kepada listeners dari text field yang dimaksud bahwa nilainya telah diupdate.
+- `LoginPage`: Widget buatan berupa halaman untuk melakukan fungsionalitas login.
